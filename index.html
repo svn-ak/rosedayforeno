@@ -12,30 +12,26 @@
             justify-content: center; 
             align-items: center; 
             min-height: 100vh; 
-            background-color: #fff0f3; /* Soft Rose Background */
+            background-color: #fff0f3; 
             margin: 0; 
             flex-direction: column;
-            font-family: 'Times New Roman', serif;
         }
         #mycanvas { 
-            border: 5px solid #ffb3c1; 
             background-color: white; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
             border-radius: 15px;
-            overflow: hidden;
         }
-        h2 { color: #c9184a; margin-top: 20px; font-style: italic; }
     </style>
 </head>
 <body>
     <div id="mycanvas"></div>
-    <h2>Made with ❤️ using Python</h2>
 
     <script type="text/javascript">
         var pythonCode = `
 import turtle as tur
 
-# 1. SET UP
+# FORCE SCREEN CREATION FOR WEB
+screen = tur.Screen()
+
 tur.speed(3)
 tur.penup()
 tur.left(90)
@@ -43,7 +39,7 @@ tur.fd(200)
 tur.pendown()
 tur.right(90)
 
-# 2. FLOWER BASE
+# FLOWER BASE
 tur.fillcolor("red")
 tur.begin_fill()
 tur.circle(10,180)
@@ -72,7 +68,7 @@ tur.left(50)
 tur.circle(150,90)
 tur.end_fill()
 
-# 3. PETAL 1
+# PETALS
 tur.left(150)
 tur.circle(-90,70)
 tur.left(20)
@@ -81,13 +77,12 @@ tur.setheading(60)
 tur.circle(80,98)
 tur.circle(-90,40)
 
-# 4. PETAL 2
 tur.left(180)
 tur.circle(90,40)
 tur.circle(-80,98)
 tur.setheading(-83)
 
-# 5. LEAVES 1
+# LEAVES
 tur.fd(30)
 tur.left(90)
 tur.fd(25)
@@ -105,7 +100,6 @@ tur.fd(85)
 tur.left(90)
 tur.fd(80)
 
-# 6. LEAVES 2
 tur.right(90)
 tur.right(45)
 tur.fillcolor("green")
@@ -121,7 +115,7 @@ tur.fd(60)
 tur.right(90)
 tur.circle(200,60)
 
-# 7. THE MESSAGE
+# MESSAGE
 tur.penup()
 tur.goto(-140, -250)
 tur.pendown()
