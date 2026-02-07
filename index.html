@@ -1,144 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For Eno</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/skulpt/1.2.0/skulpt-stdlib.js"></script>
     <style>
-        body { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            background-color: #fff0f3; 
-            margin: 0; 
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #fff0f3;
+            font-family: 'Times New Roman', serif;
         }
-        #mycanvas { 
-            border: 2px solid #ffb3c1;
+        canvas {
             background-color: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 90%;
+        }
+        #message {
+            margin-top: 20px;
+            color: #d63333;
+            font-size: 24px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 2s;
         }
     </style>
 </head>
 <body>
 
-    <div id="mycanvas"></div>
+    <canvas id="roseCanvas" width="500" height="600"></canvas>
+    <div id="message">Happy Rose Day Eno <3</div>
 
-    <script type="text/javascript">
-        function builtinRead(x) {
-            if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
-                throw "File not found: '" + x + "'";
-            return Sk.builtinFiles["files"][x];
+    <script>
+        const canvas = document.getElementById('roseCanvas');
+        const ctx = canvas.getContext('2d');
+        let t = 0;
+
+        // Move center to middle-bottom
+        ctx.translate(250, 400);
+        ctx.scale(1, -1); // Flip to match Turtle's coordinate system
+
+        function draw() {
+            if (t > 15) {
+                document.getElementById('message').style.opacity = 1;
+                return;
+            }
+
+            // Simple Rose Petal Logic
+            ctx.beginPath();
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            
+            // Mathematical Rose Formula (much faster and cleaner for web)
+            for (let i = 0; i < t; i += 0.01) {
+                let r = 150 * Math.sin(4 * i) * Math.cos(1 * i);
+                let x = r * Math.cos(i);
+                let y = r * Math.sin(i) + (i * 10); // Slight upward spiral
+                ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Draw Stem
+            ctx.beginPath();
+            ctx.strokeStyle = "green";
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -150);
+            ctx.stroke();
+
+            // Draw Leaves
+            if (t > 5) {
+                ctx.fillStyle = "green";
+                ctx.beginPath();
+                ctx.ellipse(-20, -50, 10, 30, Math.PI / 4, 0, 2 * Math.PI);
+                ctx.ellipse(20, -80, 10, 30, -Math.PI / 4, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            t += 0.1;
+            requestAnimationFrame(draw);
         }
 
-        // Configuration for the drawing area
-        Sk.TurtleGraphics = {
-            target: 'mycanvas',
-            width: 500,
-            height: 600
-        };
-
-        var pythonCode = `
-import turtle as tur
-t = tur.Turtle()
-tur.speed(3)
-
-# Start Drawing
-tur.penup()
-tur.left(90)
-tur.fd(150)
-tur.pendown()
-tur.right(90)
-
-# Flower Base
-tur.fillcolor("red")
-tur.begin_fill()
-tur.circle(10,180)
-tur.circle(25,110)
-tur.left(50)
-tur.circle(60,45)
-tur.circle(20,170)
-tur.right(24)
-tur.fd(30)
-tur.left(10)
-tur.circle(30,110)
-tur.fd(20)
-tur.left(40)
-tur.circle(90,70)
-tur.circle(30,150)
-tur.right(30)
-tur.fd(15)
-tur.circle(80,90)
-tur.left(15)
-tur.fd(45)
-tur.right(165)
-tur.fd(20)
-tur.left(155)
-tur.circle(150,80)
-tur.left(50)
-tur.circle(150,90)
-tur.end_fill()
-
-# Petals
-tur.left(150)
-tur.circle(-90,70)
-tur.left(20)
-tur.circle(75,105)
-tur.setheading(60)
-tur.circle(80,98)
-tur.circle(-90,40)
-tur.left(180)
-tur.circle(90,40)
-tur.circle(-80,98)
-tur.setheading(-83)
-
-# Leaves
-tur.fd(30)
-tur.left(90)
-tur.fd(25)
-tur.left(45)
-tur.fillcolor("green")
-tur.begin_fill()
-tur.circle(-80,90)
-tur.right(90)
-tur.circle(-80,90)
-tur.end_fill()
-tur.right(135)
-tur.fd(60)
-tur.left(180)
-tur.fd(85)
-tur.left(90)
-tur.fd(80)
-tur.right(90)
-tur.right(45)
-tur.fillcolor("green")
-tur.begin_fill()
-tur.circle(80,90)
-tur.left(90)
-tur.circle(80,90)
-tur.end_fill()
-tur.left(135)
-tur.fd(60)
-tur.left(180)
-tur.fd(60)
-tur.right(90)
-tur.circle(200,60)
-
-# Message
-tur.penup()
-tur.goto(-140, -230)
-tur.pendown()
-tur.color("Red")
-tur.write("Happy Rose Day Eno <3", align="left", font=("Times New Roman", 18, "bold"))
-tur.hideturtle()
-        `;
-
-        Sk.configure({read:builtinRead});
-        Sk.misceval.asyncToPromise(function() {
-            return Sk.importMainWithBody("<stdin>", false, pythonCode, true);
-        });
+        // Start the animation
+        draw();
     </script>
 </body>
 </html>
