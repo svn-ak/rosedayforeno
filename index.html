@@ -2,91 +2,179 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For Eno</title>
     <style>
         body {
-            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #fff0f3;
-            font-family: 'Times New Roman', serif;
+            background-color: #fff9fa;
+            margin: 0;
+            overflow: hidden;
         }
-        canvas {
-            background-color: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            max-width: 90%;
+        #canvasContainer {
+            position: relative;
+            background: white;
+            border: 2px solid #333;
+            box-shadow: 12px 12px 0px #ebdadd;
+            padding: 10px;
         }
-        #message {
-            margin-top: 20px;
-            color: #d63333;
-            font-size: 24px;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 2s;
+        canvas { display: block; background: white; }
+        #pencil {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #222;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            display: none;
         }
     </style>
 </head>
 <body>
 
+<div id="canvasContainer">
+    <div id="pencil"></div>
     <canvas id="roseCanvas" width="500" height="600"></canvas>
-    <div id="message">Happy Rose Day Eno <3</div>
+</div>
 
-    <script>
-        const canvas = document.getElementById('roseCanvas');
-        const ctx = canvas.getContext('2d');
-        let t = 0;
+<script>
+    const canvas = document.getElementById('roseCanvas');
+    const ctx = canvas.getContext('2d');
+    const pencil = document.getElementById('pencil');
 
-        // Move center to middle-bottom
-        ctx.translate(250, 400);
-        ctx.scale(1, -1); // Flip to match Turtle's coordinate system
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
-        function draw() {
-            if (t > 15) {
-                document.getElementById('message').style.opacity = 1;
-                return;
+    let drawQueue = [];
+    let currentTaskIdx = 0;
+    let currentPointIdx = 0;
+    
+    // Baselines for speed
+    const DRAW_SPEED = 4.5; // Constant human speed
+    const JITTER_AMT = 0.5;
+
+    const jitter = () => (Math.random() - 0.5) * JITTER_AMT;
+
+    function addPath(points, color, width, fill = null) {
+        let interpolated = [];
+        for (let i = 0; i < points.length - 1; i++) {
+            let p1 = points[i], p2 = points[i+1];
+            let dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            let steps = Math.max(1, Math.floor(dist / DRAW_SPEED));
+            for (let s = 0; s <= steps; s++) {
+                let t = s / steps;
+                interpolated.push({
+                    x: p1.x + (p2.x - p1.x) * t + jitter(),
+                    y: p1.y + (p2.y - p1.y) * t + jitter()
+                });
             }
+        }
+        drawQueue.push({ pts: interpolated, color, width, fill, originalPts: points });
+    }
 
-            // Simple Rose Petal Logic
-            ctx.beginPath();
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 2;
-            
-            // Mathematical Rose Formula (much faster and cleaner for web)
-            for (let i = 0; i < t; i += 0.01) {
-                let r = 150 * Math.sin(4 * i) * Math.cos(1 * i);
-                let x = r * Math.cos(i);
-                let y = r * Math.sin(i) + (i * 10); // Slight upward spiral
-                ctx.lineTo(x, y);
-            }
-            ctx.stroke();
+    // --- 1. THE ROSE ---
+    // Stem
+    addPath([{x:250, y:550}, {x:260, y:450}, {x:250, y:250}], "#2d5a27", 3);
 
-            // Draw Stem
-            ctx.beginPath();
-            ctx.strokeStyle = "green";
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, -150);
-            ctx.stroke();
+    // Leaves
+    addPath([{x:255, y:420}, {x:220, y:410}, {x:190, y:430}, {x:220, y:450}, {x:255, y:440}, {x:255, y:420}], "#3e7a37", 2, "#4fa345");
+    addPath([{x:258, y:480}, {x:300, y:460}, {x:330, y:480}, {x:300, y:500}, {x:258, y:490}, {x:258, y:480}], "#3e7a37", 2, "#4fa345");
 
-            // Draw Leaves
-            if (t > 5) {
-                ctx.fillStyle = "green";
-                ctx.beginPath();
-                ctx.ellipse(-20, -50, 10, 30, Math.PI / 4, 0, 2 * Math.PI);
-                ctx.ellipse(20, -80, 10, 30, -Math.PI / 4, 0, 2 * Math.PI);
-                ctx.fill();
-            }
+    // Rose Head (Bud style with spiral top)
+    const roseOutline = [
+        {x:250, y:250}, {x:190, y:190}, {x:195, y:120}, {x:250, y:80}, 
+        {x:305, y:120}, {x:310, y:190}, {x:250, y:250}
+    ];
+    addPath(roseOutline, "#800000", 3, "#ff0000");
 
-            t += 0.1;
-            requestAnimationFrame(draw);
+    // Petal creases
+    addPath([{x:220, y:130}, {x:250, y:170}, {x:280, y:130}], "#b01c1c", 2);
+    addPath([{x:250, y:110}, {x:230, y:100}, {x:250, y:90}, {x:270, y:100}, {x:250, y:115}], "#b01c1c", 2);
+
+    // --- 2. HANDWRITING ---
+    function textStroke(pts) { addPath(pts, "#444", 2); }
+
+    // h-a-p-p-y
+    textStroke([{x:60, y:520}, {x:60, y:550}]); 
+    textStroke([{x:60, y:535}, {x:75, y:535}, {x:75, y:550}]); // h
+    textStroke([{x:100, y:540}, {x:85, y:540}, {x:85, y:550}, {x:100, y:550}, {x:100, y:535}]); // a
+    textStroke([{x:115, y:540}, {x:115, y:565}]); 
+    textStroke([{x:115, y:540}, {x:130, y:540}, {x:130, y:550}, {x:115, y:550}]); // p
+    textStroke([{x:145, y:540}, {x:145, y:565}]); 
+    textStroke([{x:145, y:540}, {x:160, y:540}, {x:160, y:550}, {x:145, y:550}]); // p
+    textStroke([{x:170, y:540}, {x:180, y:555}, {x:190, y:540}, {x:175, y:565}]); // y
+
+    // r-o-s-e
+    textStroke([{x:210, y:540}, {x:210, y:550}]); 
+    textStroke([{x:210, y:545}, {x:220, y:540}]); // r
+    // New simple "o" circle
+    textStroke([{x:245, y:538}, {x:235, y:540}, {x:233, y:545}, {x:235, y:550}, {x:245, y:552}, {x:252, y:550}, {x:255, y:545}, {x:252, y:540}, {x:245, y:538}]); 
+    textStroke([{x:275, y:540}, {x:265, y:540}, {x:263, y:545}, {x:275, y:545}, {x:277, y:550}, {x:265, y:550}]); // s
+    textStroke([{x:285, y:545}, {x:300, y:545}, {x:300, y:540}, {x:285, y:540}, {x:285, y:550}, {x:300, y:550}]); // e
+
+    // d-a-y
+    textStroke([{x:335, y:530}, {x:335, y:550}]); 
+    textStroke([{x:335, y:550}, {x:320, y:550}, {x:320, y:540}, {x:335, y:540}]); // d
+    textStroke([{x:355, y:540}, {x:345, y:540}, {x:345, y:550}, {x:355, y:550}, {x:355, y:535}]); // a
+    textStroke([{x:365, y:540}, {x:375, y:555}, {x:385, y:540}, {x:370, y:565}]); // y
+
+    // e-n-o
+    textStroke([{x:405, y:545}, {x:420, y:545}, {x:420, y:540}, {x:405, y:540}, {x:405, y:550}, {x:420, y:550}]); // e
+    textStroke([{x:435, y:540}, {x:435, y:550}]); 
+    textStroke([{x:435, y:543}, {x:445, y:543}, {x:445, y:550}]); // n
+    // Second simple "o" circle
+    textStroke([{x:465, y:538}, {x:458, y:540}, {x:455, y:545}, {x:458, y:550}, {x:465, y:552}, {x:472, y:550}, {x:475, y:545}, {x:472, y:540}, {x:465, y:538}]); 
+
+    // < 3
+    textStroke([{x:485, y:542}, {x:478, y:545}, {x:485, y:548}]); // <
+    textStroke([{x:490, y:540}, {x:500, y:540}, {x:495, y:545}, {x:500, y:550}, {x:490, y:550}]); // 3
+
+    // --- ANIMATION ENGINE ---
+    function animate() {
+        if (currentTaskIdx >= drawQueue.length) {
+            pencil.style.display = 'none';
+            return;
         }
 
-        // Start the animation
-        draw();
-    </script>
+        pencil.style.display = 'block';
+        let task = drawQueue[currentTaskIdx];
+        let p1 = task.pts[currentPointIdx];
+        let p2 = task.pts[currentPointIdx + 1];
+
+        pencil.style.left = (p1.x + 10) + 'px';
+        pencil.style.top = (p1.y + 10) + 'px';
+
+        if (p2) {
+            ctx.beginPath();
+            ctx.strokeStyle = task.color;
+            ctx.lineWidth = task.width;
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            currentPointIdx++;
+            requestAnimationFrame(animate); 
+        } else {
+            // FINISH STROKE: BUCKET FILL
+            if (task.fill) {
+                ctx.fillStyle = task.fill;
+                ctx.beginPath();
+                ctx.moveTo(task.originalPts[0].x, task.originalPts[0].y);
+                task.originalPts.forEach(p => ctx.lineTo(p.x, p.y));
+                ctx.fill();
+                ctx.stroke(); 
+            }
+            currentTaskIdx++;
+            currentPointIdx = 0;
+            setTimeout(animate, 350); // Small pause for the "hand" to move
+        }
+    }
+
+    animate();
+</script>
 </body>
 </html>
